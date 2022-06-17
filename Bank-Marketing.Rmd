@@ -1,0 +1,471 @@
+---
+title: "Bank-Marketing"
+author: "Zhiyi Chen"
+date: "6/15/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(gplots)
+library(car)
+library(caret)
+library(grid)
+library(gridExtra)
+library(rpart)
+library(rpart.plot)
+library(ggmap)
+library(lattice)
+```
+
+### Data Description
+
+```{r, comment = NA}
+df <- read.csv("/Users/chenzhiyi/Desktop/Bank Marketing/bank-additional/bank-additional.csv", sep=";", header=TRUE)
+summary(df)
+df
+```
+
+Descriptive Analysis
+Target Variable: 
+y (Categorical)-has the client subscribed a term deposit ("Yes", "No")
+
+Predictor Variables:
+1. Age (Numeric): age (18-88)
+2. Job (Categorical):  type of job ('admin.','blue-collar','entrepreneur','housemaid','management','retired','self-employed','services','student','technician','unemployed','unknown')
+3. Marital (Categorical): marital status ('divorced','married','single','unknown'; note: 'divorced' means divorced or widowed)
+4. Education (Categorical): ('basic.4y','basic.6y','basic.9y','high.school','illiterate','professional.course','university.degree','unknown')
+5. Default (Categorical):  has credit in default? ('no','yes','unknown')
+6. Housing (Categorical):  has housing loan? ( 'no','yes','unknown')
+7. Loan (Categorical): Has personal loan? ('no', 'yes', 'unknown')
+8. Contact (Categorical): contact communication type ('cellular','telephone')
+9. Month (Categorical): last contact month of year ('jan', 'feb', 'mar', ..., 'nov', 'dec')
+10. day_of_week (Categorical): last contact day of the week ('mon','tue','wed','thu','fri')
+11. duration (Numeric): last contact duration, in seconds. Important note: this attribute highly affects the output target (e.g., if duration=0 then y='no').
+12. campaign (Numeric): number of contacts performed during this campaign and for this client (includes last contact)
+13 - pdays (Numeric): number of days that passed by after the client was last contacted from a previous campaign (999 means client was not previously contacted)
+14 - previous (Numeric): number of contacts performed before this campaign and for this client 
+15 - poutcome (Categorical): outcome of the previous marketing campaign ('failure','nonexistent','success') social and economic context attributes
+16 - emp.var.rate (Numeric): employment variation rate - quarterly indicator 
+17 - cons.price.idx (Numeric): consumer price index - monthly indicator 
+18 - cons.conf.idx (Numeric): consumer confidence index - monthly indicator 
+19 - euribor3m (Numeric): euribor 3 month rate - daily indicator (numeric)
+20 - nr.employed (Numeric): number of employees - quarterly indicator 
+
+```{r, comment=NA}
+df <- subset(df, select = -c(10, 11, 17:20))
+df$pdays[df$pdays==999] <- -1
+df
+```
+
+### Exploratory Analysis
+
+#### Numeric Data
+
+```{r, comment = NA}
+p1 <- ggplot(df, aes(x= age))+
+  geom_histogram() +
+  ggtitle("Distribution of Age")+
+    theme_classic()+
+  theme(plot.title = element_text(size=10),
+        axis.title = element_text(size=10),
+        legend.title = element_text(size=10))+
+  theme(legend.position = "none")
+
+p2 <- ggplot(df, aes(x= campaign))+
+  geom_histogram() +
+  ggtitle("Distribution of Campaign")+
+    theme_classic()+
+  theme(plot.title = element_text(size=10),
+        axis.title = element_text(size=10),
+        legend.title = element_text(size=10))+
+  theme(legend.position = "none")
+
+p3 <- ggplot(df, aes(x= pdays))+
+  geom_histogram() +
+  ggtitle("Distribution of Pdays")+
+    theme_classic()+
+  theme(plot.title = element_text(size=10),
+        axis.title = element_text(size=10),
+        legend.title = element_text(size=10))+
+  theme(legend.position = "none")
+
+p4 <- ggplot(df, aes(x= previous))+
+  geom_histogram() +
+  ggtitle("Distribution of Previous")+
+    theme_classic()+
+  theme(plot.title = element_text(size=10),
+        axis.title = element_text(size=10),
+        legend.title = element_text(size=10))+
+  theme(legend.position = "none")
+
+p5 <- ggplot(df, aes(x= emp.var.rate))+
+  geom_histogram() +
+  ggtitle("Distribution of Employment Variation Rate")+
+    theme_classic()+
+  theme(plot.title = element_text(size=10),
+        axis.title = element_text(size=10),
+        legend.title = element_text(size=10))+
+  theme(legend.position = "none")
+
+grid.arrange(p1, p2, p3, p4, p5, ncol=3, nrow=2, top=textGrob("Numeric Predictors' Distribution"))
+```
+
+#### Categorical Data
+
+```{r, comment = NA}
+ggplot(df, aes(x=job, y=y, fill=job)) +
+  geom_boxplot()+
+  facet_wrap("job", scales = "free") 
+
+ggplot(df, aes(x=marital, y=y, fill=marital)) +
+  geom_boxplot()+
+  facet_wrap("marital", scales = "free")
+
+ggplot(df, aes(x=education, y=y, fill=education)) +
+  geom_boxplot()+
+  facet_wrap("education", scales = "free")
+
+ggplot(df, aes(x=default, y=y, fill=default)) +
+  geom_boxplot()+
+  facet_wrap("default", scales = "free")
+
+ggplot(df, aes(x=housing, y=y, fill=housing)) +
+  geom_boxplot()+
+  facet_wrap("housing", scales = "free")
+
+ggplot(df, aes(x=loan, y=y, fill=loan)) +
+  geom_boxplot()+
+  facet_wrap("loan", scales = "free")
+
+ggplot(df, aes(x=contact, y=y, fill=contact)) +
+  geom_boxplot()+
+  facet_wrap("contact", scales = "free")
+
+ggplot(df, aes(x=month, y=y, fill=month)) +
+  geom_boxplot()+
+  facet_wrap("month", scales = "free")
+
+ggplot(df, aes(x=poutcome, y=y, fill=month))+
+  geom_boxplot()+
+  facet_wrap("poutcome", scales = "free")
+```
+
+### Models
+
+#### Logistic Regression
+
+```{r, comment = NA}
+df$job <- case_when(
+  df$job == 'admin.' ~ 0,
+  df$job == 'blue-collar' ~ 1,
+  df$job == 'entrepreneur' ~ 2,
+  df$job == 'housemaid' ~ 3,
+  df$job == 'management' ~ 4,
+  df$job == 'retired' ~ 5,
+  df$job == 'self-employed' ~ 6,
+  df$job == 'services' ~ 7,
+  df$job == 'student' ~ 8,
+  df$job == 'technician' ~ 9,
+  df$job == 'unemployed' ~ 10,
+  df$job == 'unknown' ~ 11
+)
+
+df$marital <- case_when(
+  df$marital == 'divorced' ~ 0,
+  df$marital == 'married' ~ 1,
+  df$marital == 'single' ~ 2,
+  df$marital == 'unknown' ~ 3
+)
+
+df$education <- case_when(
+  df$education == 'basic.4y' ~ 0,
+  df$education == 'basic.6y' ~ 1,
+  df$education == 'basic.9y' ~ 2,
+  df$education == 'high.school' ~ 3,
+  df$education == 'illiterate' ~ 4,
+  df$education == 'professional.course' ~ 5,
+  df$education == 'university.degree' ~ 6,
+  df$education == 'unknown' ~ 7 
+)
+
+df$default <- case_when(
+  df$default == "no" ~ 0,
+  df$default == "yes" ~ 1,
+  df$default == "unknown" ~ 2
+)
+
+df$housing <- case_when(
+  df$housing == "no" ~ 0,
+  df$housing == "yes" ~ 1,
+  df$housing == "unknown" ~ 2
+)
+
+df$loan <- case_when(
+  df$loan == "no" ~ 0,
+  df$loan == "yes" ~ 1,
+  df$loan == "unknown" ~ 2
+)
+
+df$contact <- case_when(
+  df$contact == 'cellular' ~ 0,
+  df$contact == 'telephone' ~ 1
+)
+
+df$month <- case_when(
+  df$month == 'jan' ~ 1,
+  df$month == 'feb' ~ 2,
+  df$month == 'mar' ~ 3,
+  df$month == 'apr' ~ 4,
+  df$month == 'may' ~ 5,
+  df$month == 'jun' ~ 6,
+  df$month == 'jul' ~ 7,
+  df$month == 'aug' ~ 8,
+  df$month == 'sep' ~ 9,
+  df$month == 'oct' ~ 10,
+  df$month == 'nov' ~ 11,
+  df$month == 'dec' ~ 12
+)
+
+
+df$poutcome <- case_when(
+  df$poutcome == 'failure' ~ 0,
+  df$poutcome == 'nonexistent' ~ 1,
+  df$poutcome == 'success' ~ 2
+)
+
+
+df$y <- case_when(
+  df$y == 'no' ~ 0,
+  df$y == 'yes' ~ 1
+)
+
+df$y <- as.factor(df$y)
+df$poutcome <- as.factor(df$poutcome)
+df$month <- as.factor(df$month)
+df$contact <- as.factor(df$contact)
+df$loan <- as.factor(df$loan)
+df$housing <- as.factor(df$housing)
+df$default <- as.factor(df$default)
+df$education <- as.factor(df$education)
+df$marital <- as.factor(df$marital)
+df$job <- as.factor(df$job)
+```
+
+
+
+```{r, comment= NA}
+set.seed(2)
+train.index <- sample(c(1:dim(df)[1]), dim(df)[1]*0.6)  
+train.df <- df[train.index, ]
+valid.df <- df[-train.index, ]
+
+```
+
+
+
+```{r, comment= NA}
+logit.reg_logit1 <- glm(y ~., data = train.df, family = binomial(link = "logit"))
+options(scipen=999)
+summary(logit.reg_logit1)
+
+
+
+
+logit.reg_logit2 <- glm(y~. -marital-education-default-housing-loan-contact-month-campaign-previous, data=train.df, family = binomial(link="logit"))
+options(scipen=999)
+summary(logit.reg_logit2)
+```
+
+```{r, comment= NA}
+logit.reg.pred <- predict(logit.reg_logit2, valid.df, type = "response")
+data.frame(actual = valid.df$y, predicted = logit.reg.pred)
+
+summary(logit.reg.pred)
+confusionMatrix(as.factor(ifelse(logit.reg.pred > 0.5, 1, 0)), as.factor(valid.df$y))
+# F1 Score = 2 * (Precision * Recall) / (Precision + Recall)
+F1 = 2 * (0.9911 * 0.1915)/(0.9911 + 0.1915)
+```
+
+
+#### Classification Tree
+
+```{r, comment = NA}
+curr_F1 <- 0
+best_cp<- 0
+best_minsplit <- 2
+
+for( cps in seq(from=0.001, to=0.1, by=0.01)) {#from 0 is toooo big, can minimize the range to make the tree diagram smaller
+  for( minsplits in seq(from=1, to=10, by=1)) {
+    
+    # train the tree
+    trained_tree <- rpart(y ~ ., data = train.df, method = "class", 
+                          cp = cps, minsplit = minsplits)
+    
+    # predict with the trained tree
+    train.results <- predict( trained_tree, train.df, type = "class" )
+    valid.results <- predict( trained_tree, valid.df, type = "class" )  
+    
+    # generate the confusion matrix to compare the prediction with the actual value of Personal Loan acceptance (0/1), 
+    # to calculate the sensitivity and specificity
+    results <- confusionMatrix( valid.results, as.factor(valid.df$y) )
+    
+    # calculate F1 from results
+    Sensitivity <- results$byClass[1] # where did this come from?
+    Specificity <- results$byClass[2] 
+    F1 <- (2 * Sensitivity * Specificity) / (Sensitivity + Specificity)
+    
+    # Is this F1 the best we have so far? If so, store the current values:
+    if( F1 > curr_F1 ) {
+      curr_F1 <- F1
+      best_cp <- cps
+      best_minsplit<- minsplits
+    }
+  }
+}
+cat("best F1=" , curr_F1, "; best best_cost_penalty=", best_cp, "; best_min_leaf_to_split=", best_minsplit)
+
+# retrain the tree to match the best parameters we found  
+trained_tree <- rpart(y ~ ., data = train.df, method = "class", 
+                      cp = best_cp , minsplit = best_minsplit )  # change the original parameters
+
+# print that best tree 
+prp(trained_tree, type = 1, extra = 1, under = TRUE, split.font = 1, varlen = -10, 
+    box.col=ifelse(trained_tree$frame$var == "<leaf>", 'gray', 'white'))  
+```
+
+```{r, comment = NA}
+train.results <- predict( trained_tree, train.df, type = "class" )
+valid.results <- predict( trained_tree, valid.df, type = "class" ) 
+confusionMatrix( train.results, as.factor(train.df$y))
+confusionMatrix( valid.results, as.factor(valid.df$y) )
+```
+
+
+#### Random Forest
+
+```{r, comment =NA}
+#try some randomForest
+library(randomForest)
+rf <- randomForest(y~., data=train.df, ntree = 500, mtry =4, nodesize =5, importance=TRUE,na.action=na.roughfix)
+varImpPlot(rf, type = 1)
+rf.pred <- predict(rf, valid.df)
+con_valid <- confusionMatrix(rf.pred, as.factor(valid.df$y))
+con_valid
+```
+
+```{r, comment =NA}
+#grid search
+curr_F1 <- 0
+best_ntree<- 0
+best_mtry <- 2
+for( i in seq(from=100, to=500, by=100)) {
+  for( j in seq(from=1, to=10, by=1)) {
+    
+    # train the tree
+    trained_tree <-randomForest(y~., data=train.df, ntree = i, mtry =j, nodesize =5, importance=TRUE)
+    
+    # predict with the trained tree
+    train.results <- predict( trained_tree, train.df, type = "class" )
+    valid.results <- predict( trained_tree, valid.df, type = "class" )  
+    
+    # generate the confusion matrix to compare the prediction with the actual value of Personal Loan acceptance (0/1), 
+    # to calculate the sensitivity and specificity
+    results <- confusionMatrix( valid.results, as.factor(valid.df$y) )
+    
+    # calculate F1 from results
+    Sensitivity <- results$byClass[1] # where did this come from?
+    Specificity <- results$byClass[2] 
+    F1 <- (2 * Sensitivity * Specificity) / (Sensitivity + Specificity)
+    
+    # Is this F1 the best we have so far? If so, store the current values:
+    if( F1 > curr_F1 ) {
+      curr_F1 <- F1
+      best_ntree <- i
+      best_mtry<- j
+    }
+  }
+}
+cat("best F1=" , curr_F1, "; best best_ntree=", best_ntree, "; best_mtry=", best_mtry)
+
+# retrain the tree to match the best parameters we found  
+rf <-randomForest(y~., data=train.df, ntree = best_ntree, mtry =best_mtry, nodesize =5, importance=TRUE)
+
+rf.pred <- predict(rf, valid.df)
+con_valid <- confusionMatrix(rf.pred, as.factor(valid.df$y))
+
+```
+
+```{r, comment= NA}
+
+varImpPlot(rf, type = 1)
+con_valid
+```
+
+#### Boosted Tree
+
+```{r, comment= NA}
+library(adabag)
+set.seed(2)
+
+
+price_boost <- boosting(y~., mfinal = 100, data=train.df)
+price_boost_pred <- predict(price_boost, valid.df)
+confusionMatrix(as.factor(price_boost_pred$class), as.factor(valid.df$y))
+
+importanceplot(price_boost)
+```
+
+```{r, comment=NA}
+#grid search for boosted tree
+curr_F1 <- 0
+best_mfinal<- 0
+
+for( i in seq(from=1, to=100, by=10)) {
+    # train the tree
+    trained_tree <-boosting(y~., mfinal = i, data=train.df)
+    
+    # predict with the trained tree
+    train.results <- predict( trained_tree, train.df )
+    valid.results <- predict( trained_tree, valid.df )  
+    
+    # generate the confusion matrix to compare the prediction with the actual value of Personal Loan acceptance (0/1), 
+    # to calculate the sensitivity and specificity
+    results <- confusionMatrix(as.factor(valid.results$class), as.factor(valid.df$y))
+    
+    # calculate F1 from results
+    Sensitivity <- results$byClass[1] # where did this come from?
+    Specificity <- results$byClass[2] 
+    F1 <- (2 * Sensitivity * Specificity) / (Sensitivity + Specificity)
+    
+    # Is this F1 the best we have so far? If so, store the current values:
+    if( F1 > curr_F1 ) {
+      curr_F1 <- F1
+      best_mfinal <- i
+    
+    }
+  }
+cat("best F1=" , curr_F1, "; best mfinal=", best_mfinal )
+
+price_boost <- boosting(y~., mfinal = best_mfinal, data=train.df)
+price_boost_pred <- predict(price_boost, valid.df)
+confusionMatrix(as.factor(price_boost_pred$class), as.factor(valid.df$y))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
