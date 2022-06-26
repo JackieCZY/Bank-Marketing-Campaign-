@@ -10,7 +10,7 @@ The classification goal is to predict if the client will subscribe (yes/no) a te
 
 There are four datasests available from the data base, bank-additional-full.csv has 41188 observations and 20 inputs from 2008 - 2010, bank-additional.csv has 10% of the examples (4119) and 20 inputs, bank-full.csv all examples and 17 inputs, which is an older vesion of the data that has less inputs, and bank.csv has 10% of the examples and 17 inputs.
 
-The dataset used for modeling and prediction is the bank-additional.csv, as it contains the newest inputs for measuring. All the categorical variables have been encoded as numbers for classification, and several variables are dropped due to insignificance.
+The dataset used for modeling and prediction is the bank-additional.csv, as it contains the newest inputs for measuring. All the categorical variables have been encoded as numbers for classification, and several variables are dropped due to insignificance. There is no missing value or duplicate detected in this dataset, so there is no need for imputation. Outliers are removed using interquartile approach by removing the values below the first quartile and above third quartile.
 
 ### Exploratory Data Analysis
 
@@ -18,7 +18,9 @@ Numeric predictor variables:
 
 <img width="694" alt="Screen Shot 2022-06-17 at 6 38 28 PM" src="https://user-images.githubusercontent.com/103064444/174410094-6992f1ec-89f9-413c-906d-4a825234976b.png">
 
-Note: variable pdays originally has 999 meaning client was not previously contacted, and it has been changed to -1.
+Note: variable pdays originally has 999 meaning client was not previously contacted, and it has been changed to -1. 999 might be considered as outliers comparing with the other numbers, thus the changed has been made.
+
+The distribution of age in the dataset shows that the age of clients mainly distributed between age 25 and age 50, and there are few outliers after age 60 that skewed the distribution to the right. The distribution of campaign shows that the distribution is skewed to the right with outliers above 10. The distribution of pdays shows that most of the clients were not previously contacted, and only a few of the clients were previously contacted, and the number of days passed since they were contacted skewed the distribution to the right. The distribution of the number of contacts performed before the campaign skewed to the right. The distribution of the employment variation rate is scattered from negative values to one and above. Some of the distributions for numeric variables are skewed to the right but they will not be logged to follow the linearity assuptions because the originality of the data needs to be preserved to predict authentic y. However the accuracy of the prediction might be influenced.
 
 Categorical predictor variables:
 
@@ -39,6 +41,8 @@ Categorical predictor variables:
 <img width="692" alt="Screen Shot 2022-06-17 at 6 52 19 PM" src="https://user-images.githubusercontent.com/103064444/174410388-f2991ac1-ead3-4d08-b823-ee08bdf7c44f.png">
 
 <img width="691" alt="Screen Shot 2022-06-17 at 6 53 27 PM" src="https://user-images.githubusercontent.com/103064444/174410397-7f1fc4cf-a994-4bd3-a4fe-73d7dae131db.png">
+
+From the boxplot for education level and target variable y, the ensembled plots show that if the education level of clients is illterate, target variable y is "no" for all the outcomes. Also, if the client does have credit in default, the client will also not subscribe the term deposit. The rest of the categorical variables show even distributions of "yes" and "no" in categories
 
 ### Modeling
 
