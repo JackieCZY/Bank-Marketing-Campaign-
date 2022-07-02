@@ -4,7 +4,7 @@
 
 RStudio ver.1.3.1073
 
-Packages
+[Packages](https://github.com/JackieCZY/Bank-Marketing-Campaign-/blob/main/requirement/requirement.txt)
 
 ### Data
 
