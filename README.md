@@ -1,5 +1,24 @@
 # Data Science Project :: Bank-Marketing-Campaign
 
+### Requirements
+
+RStudio ver.1.3.1073
+
+Packages:
+dplyr 1.0.2
+ggplot2 3.3.5
+tidyverse 1.3.0
+gplots 3.1.1
+car 3.1-11
+caret 6.0-86
+grid 4.0.2
+gridExtra 2.3
+rpart 4.1-15
+rpart.plot 3.1.0
+ggmap 3.0.0
+lattice 0.20-41
+ROSE 0.0-4
+
 ### Data
 
 Data is collected from [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/Bank+Marketing#)
@@ -11,6 +30,14 @@ The classification goal is to predict if the client will subscribe (yes/no) a te
 There are four datasests available from the data base, bank-additional-full.csv has 41188 observations and 20 inputs from 2008 - 2010, bank-additional.csv has 10% of the examples (4119) and 20 inputs, bank-full.csv all examples and 17 inputs, which is an older vesion of the data that has less inputs, and bank.csv has 10% of the examples and 17 inputs.
 
 The dataset used for modeling and prediction is the bank-additional.csv, as it contains the newest inputs for measuring. All the categorical variables have been encoded as numbers for classification, and several variables are dropped due to insignificance. There is no missing value or duplicate detected in this dataset, so there is no need for imputation. Outliers are removed using interquartile approach by removing the values below the first quartile and above third quartile.
+
+The distribution of the target variable y shows the data is imbalanced:
+
+<img width="697" alt="Screen Shot 2022-07-02 at 12 40 44 PM" src="https://user-images.githubusercontent.com/103064444/177009043-0709f80c-aa71-49f6-aee4-b676ddac5931.png">
+
+The data is first partitioned into training and validation sets. Then used Over-sampling method to balance the data
+
+<img width="824" alt="Screen Shot 2022-07-02 at 3 01 03 PM" src="https://user-images.githubusercontent.com/103064444/177013201-290a4581-8cfc-4598-a31c-90095bcf3450.png">
 
 ### Exploratory Data Analysis
 
@@ -50,23 +77,26 @@ From the boxplot for education level and target variable y, the ensembled plots 
 
 Data has been splitted into train and test data, and the result shows that a decrease in employment varation rate will increase the chance of client subscribing a term deposit by 0.39. If the outcome of previous marketing campaign changed from failure to nonexistence, the chance of client subscribing a term deposit by 0.8, and if the previous marketing campaign outcome changes to success, the chance will then increase by 1.86. 
 
-The result of the logistic regression has F1 score being 0.321, with sensitivity 0.9911 and specificity 0.1915. 
+The result of the logistic regression has F1 score being 0.3209, with sensitivity 0.7384 and specificity 0.6862. The prediction accuracy is 0.7324 
 
 #### Classification Tree
 
-Grid search has been performed to find the hyperparameters for classification tree. The best F1 score has been found to be 0.501 with cost penalty being 0.001 and minimum leaf to split being 1.
+Grid search has been performed to find the hyperparameters for classification tree. The best F1 score has been found to be 0.7179 with cost penalty being 0.031 and minimum leaf to split being 1. The confusion matrix of the training set shows an accuracy of 0.7079, along with 0.7188 sensitivity and 0.6970 specificity. The confusion matrix of the validation sets shows an accuracy of 0.7221, with a 0.7233 sensitivity and 0.7128 specificty. The training sets and validation sets show similar prediction accuracy, meaning there is no overfitting problem in the classification tree model
 
-<img width="695" alt="Screen Shot 2022-06-17 at 7 30 39 PM" src="https://user-images.githubusercontent.com/103064444/174412456-c75abe98-8ce1-463c-a786-5a95d2833df8.png">
+<img width="694" alt="Screen Shot 2022-07-02 at 1 22 47 PM" src="https://user-images.githubusercontent.com/103064444/177010300-0d64fdd2-b647-4ca6-ade9-3b4a2b86456e.png">
 
 #### Random Forest
 
-Grid search has been performed to find the hyperparameters for random forest. The best F1 score is 0.44 with ntree = 100 and mtry = 7.
+Grid search has been performed to find the hyperparameters for random forest. The best F1 score is 0.6731 with ntree = 500 and mtry = 1. The confusion matrix of validation set shows an accuracy of 0.8465, which has an 17% increase from the classification model, and the sensitiviy is 0.8870 and specificty is 0.5319. 
 
-<img width="686" alt="Screen Shot 2022-06-17 at 7 30 19 PM" src="https://user-images.githubusercontent.com/103064444/174412448-2f48a894-5394-4e3e-a623-ab3ed4b49af3.png">
+<img width="690" alt="Screen Shot 2022-07-02 at 1 28 28 PM" src="https://user-images.githubusercontent.com/103064444/177010486-8b941880-7ba1-4950-b913-8ebf551bd3bf.png">
 
 #### Boosted Tree
 
-Grid search has been performed to find the hyperparameters for boosted tree. The best F1 score is 0.469 with mfinal = 71.
+Grid search has been performed to find the hyperparameters for boosted tree. The best F1 score is 0.7051 with mfinal = 11. The confusion matrix shows an accuracy of 0.8028, which increases by 11% from the classification tree model, whereas lower than the random forest model. The sensitivity is 0.8288 and the specificity is 0.6011.
 
-<img width="680" alt="Screen Shot 2022-06-17 at 7 31 05 PM" src="https://user-images.githubusercontent.com/103064444/174412446-72e61a3b-93bd-4d9c-aa27-6fffba7a77e4.png">
+<img width="694" alt="Screen Shot 2022-07-02 at 1 34 42 PM" src="https://user-images.githubusercontent.com/103064444/177010652-3bc3f55b-8b43-4086-a084-cbb8b0aca5cd.png">
 
+### Summary
+
+After balancing the data by over sampling, classification tree model has the highest F1 score of 0.7179, which has improved by 123% from the logistic regression, but the prediction accuracy for classification tree is 0.7221, which is lower than the logistic regression's 0.7324. Random Forest, on the other hand, has a higher accuracy of 0.8465 than the classification tree model, with a higher sensitivity value and lower specificity value, meaning the random forest model will predict few false negative and more false positive results, comparing with the classification tree model. The boosted tree has increased F1 score by 4.8% from the random forest, but the accuracy is lower, with a lower sensitivity and higher specificity. Both the random forest and boosted tree perform better than the logistic regression and classification tree in terms of prediction accuracy.
