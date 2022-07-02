@@ -2,7 +2,7 @@
 
 ### Requirements
 
-RStudio ver.1.3.1073
+[RStudio ver.1.3.1073](https://www.rstudio.com/)
 
 [Packages](https://github.com/JackieCZY/Bank-Marketing-Campaign-/blob/main/requirement/requirement.txt)
 
